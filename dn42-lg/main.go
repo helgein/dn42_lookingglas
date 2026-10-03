@@ -558,7 +558,7 @@ func main() {
 	host, _ := os.Hostname()
 	host, _, _ = strings.Cut(host, ".")
 	var prefixes string
-	flag.StringVar(&cfg.listen, "listen", "127.0.0.1:8042", "Listen-Adresse, z. B. 172.20.15.129:8042")
+	flag.StringVar(&cfg.listen, "listen", "127.0.0.1:8042", "Listen-Adressen, kommagetrennt, z. B. 172.20.15.129:8042,[fd26:3f06:520e::1]:8042")
 	flag.StringVar(&cfg.socket, "socket", "/run/bird/bird.ctl", "BIRD-Control-Socket")
 	flag.StringVar(&cfg.name, "name", host, "Name dieses Knotens")
 	flag.StringVar(&cfg.title, "title", "", "Titel (Default: AS-Nummer)")
@@ -608,8 +608,22 @@ func main() {
 	mux.HandleFunc("/api/stream", a.handleStream)
 	mux.HandleFunc("/api/route", a.handleRoute)
 
+	var lns []net.Listener
+	for _, addr := range strings.Split(cfg.listen, ",") {
+		if addr = strings.TrimSpace(addr); addr == "" {
+			continue
+		}
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			log.Fatalf("listen %s: %v", addr, err)
+		}
+		lns = append(lns, ln)
+	}
+	if len(lns) == 0 {
+		log.Fatal("keine Listen-Adresse angegeben")
+	}
+
 	srv := &http.Server{
-		Addr:              cfg.listen,
 		Handler:           securityHeaders(mux),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       120 * time.Second,
@@ -621,8 +635,13 @@ func main() {
 		defer cancel()
 		_ = srv.Shutdown(sh)
 	}()
-	log.Printf("dn42-lg %s auf %s, BIRD %s, %d Remote(s)", cfg.name, cfg.listen, cfg.socket, len(cfg.remotes))
-	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	errc := make(chan error, len(lns))
+	for _, ln := range lns {
+		log.Printf("dn42-lg %s lauscht auf %s", cfg.name, ln.Addr())
+		go func(ln net.Listener) { errc <- srv.Serve(ln) }(ln)
+	}
+	log.Printf("BIRD %s, %d Remote(s)", cfg.socket, len(cfg.remotes))
+	if err := <-errc; err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 }

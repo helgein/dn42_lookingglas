@@ -1,2 +1,2 @@
 # /etc/default/dn42-lg auf spare-1 (aggregiert runkel-eval mit)
-DN42LG_ARGS="-listen 172.20.15.129:8042 -name spare-1 -prefixes 172.20.15.128/27,fd26:3f06:520e::/48 -remote runkel-eval=http://172.20.15.130:8042"
+DN42LG_ARGS="-listen 172.20.15.129:8042,[fd26:3f06:520e::1]:8042 -name spare-1 -prefixes 172.20.15.128/27,fd26:3f06:520e::/48 -remote runkel-eval=http://172.20.15.130:8042"

@@ -60,13 +60,33 @@ runkel-eval, Abfrage durch spare-1 über den iBGP-Tunnel:
     proto: tcp
 ```
 
-Soll das LG für ganz dn42 sichtbar sein, auf spare-1 zusätzlich `in-interface: "dn42+"`.
+Für ganz dn42 sichtbar, auf spare-1 zusätzlich (IPv4 und IPv6):
+
+```yaml
+  open_dn42_lg_4:
+    chain: input_open
+    family: ipv4
+    jump: ACCEPT
+    dports: "8042"
+    in-interface: "dn42+"
+    proto: tcp
+
+  open_dn42_lg_6:
+    chain: input_open
+    family: ipv6
+    jump: ACCEPT
+    dports: "8042"
+    in-interface: "dn42+"
+    proto: tcp
+```
+
+Nicht auf `[::]` oder `0.0.0.0` binden, sonst hängt das LG auch an eth0.
 
 ## Optionen
 
 | Flag | Default | Bedeutung |
 |---|---|---|
-| `-listen` | `127.0.0.1:8042` | Listen-Adresse |
+| `-listen` | `127.0.0.1:8042` | Listen-Adressen, kommagetrennt, IPv6 in eckigen Klammern |
 | `-socket` | `/run/bird/bird.ctl` | BIRD-Control-Socket |
 | `-name` | Hostname | Name dieses Routers |
 | `-prefixes` | leer | eigene Präfixe für die Ankündigungs-Matrix |
