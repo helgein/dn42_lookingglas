@@ -1,0 +1,2 @@
+# /etc/default/dn42-lg auf runkel-eval (liefert nur seine Daten an spare-1)
+DN42LG_ARGS="-listen 172.20.15.130:8042 -name runkel-eval -prefixes 172.20.15.128/27,fd26:3f06:520e::/48"

@@ -1,0 +1,31 @@
+[Unit]
+Description=dn42 Looking Glass
+After=network-online.target bird.service
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/default/dn42-lg
+ExecStart=/usr/local/bin/dn42-lg $DN42LG_ARGS
+Restart=on-failure
+RestartSec=5
+
+# nur Lesezugriff auf den BIRD-Socket über die Gruppe "bird"
+DynamicUser=yes
+SupplementaryGroups=bird
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target
